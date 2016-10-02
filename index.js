@@ -18,6 +18,7 @@ var keys = [
   '529df2efe8f349ffc62a56e80131d98175e78c89fdbe26e3c6a3e02bd72ac896'
 ]
 keys = ['13e084e9cfb26d20a7fdfa873e794bd83c9f735c5522e227c5966f159988db74']
+// keys = ['529df2efe8f349ffc62a56e80131d98175e78c89fdbe26e3c6a3e02bd72ac896']
 
 var entries = {}
 var items = []
@@ -25,7 +26,7 @@ var feeds = []
 
 for (var i = 0; i < keys.length; i++) {
   (function (key) {
-    var feed = new Hyperfeed(key, {storage: level(`./feed-${key}`), own: false})
+    var feed = new Hyperfeed(key, {own: false})
     console.log('opened', key)
     var sw = feed.swarm()
     sw.on('connection', function (peer, type) {
