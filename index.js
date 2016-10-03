@@ -5,6 +5,7 @@ const yo = require('yo-yo')
 const co = require('co')
 const crypto = require('crypto')
 const moment = require('moment')
+const async = require('async')
 
 moment.locale('zh-tw')
 
@@ -12,32 +13,36 @@ const KEYCODE_ENTER = 13
 
 var t = Date.now()
 
-var keys = [
-  '13e084e9cfb26d20a7fdfa873e794bd83c9f735c5522e227c5966f159988db74',
-  '11ca8522704537528e5e5b0575564564cfca3af452f353ddfca5973f50cf9283',
-  '529df2efe8f349ffc62a56e80131d98175e78c89fdbe26e3c6a3e02bd72ac896'
-]
-keys = ['13e084e9cfb26d20a7fdfa873e794bd83c9f735c5522e227c5966f159988db74']
-// keys = ['529df2efe8f349ffc62a56e80131d98175e78c89fdbe26e3c6a3e02bd72ac896']
+var keys = ['cee1cbbf213c04c7c3b37a25fc88cdbf0e54d0c170ea05b490b8e1d9b2074923']
 
 var entries = {}
 var items = []
 var feeds = []
 
+var tasks = []
 for (var i = 0; i < keys.length; i++) {
-  (function (key) {
+  tasks.push(connect(keys[i]))
+}
+
+async.series(tasks, (err, connections) => {
+  console.log('all connected', connections.length)
+})
+
+function connect (key) {
+  return (cb) => {
+    console.log('start connect', key)
     var feed = new Hyperfeed(key, {own: false})
     console.log('opened', key)
     var sw = feed.swarm()
+    console.log('swarming', key)
+    sw.on('error', e => console.error(e))
     sw.on('connection', function (peer, type) {
       console.log(`[${feed.key().toString('hex')}]`, 'got', type) // type is 'webrtc-swarm' or 'discovery-swarm'
       console.log(`[${feed.key().toString('hex')}]`, 'connected to', sw.connections, 'peers')
       peer.on('close', function () {
         console.log(`[${feed.key().toString('hex')}]`, 'peer disconnected')
       })
-    })
-    feed.list((err, entries) => {
-      console.log(err, entries.length)
+      cb()
     })
     feeds[key] = feed
     entries[key] = []
@@ -47,9 +52,10 @@ for (var i = 0; i < keys.length; i++) {
     list.on('data', entry => {
       if (moment(entry.ctime) > moment().subtract(3, 'days')) {
         entries[key].push(entry)
+        console.log(entry)
       }
     })
-  })(keys[i])
+  }
 }
 
 function updateApp () {
@@ -62,7 +68,6 @@ function updateApp () {
         items.push(item)
       }
     }
-    console.log(items)
     console.log(Date.now() - t)
     items = items.sort((x, y) => { return y.date - x.date })
 
@@ -72,7 +77,7 @@ function updateApp () {
 }
 
 function render () {
-  console.log('render', items)
+  console.log('render', items.length)
   yo.update(document.querySelector('#app'), yo`
     <div id="app">
       <div class="ui two column centered grid">
@@ -132,5 +137,4 @@ function renderItem (x) {
   `
 }
 
-updateApp()
 setInterval(updateApp, 10000)
