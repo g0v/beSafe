@@ -100,8 +100,14 @@ function renderItems (items) {
   items.forEach((x, i) => {
     if (i === 0) {
       results.push(yo`<div class="ui horizontal divider">最新</div>`)
-    } else if ((i > 0) && (moment(x.date).day() !== moment(items[i - 1].date).day())) {
-      results.push(yo`<div class="ui horizontal divider">${moment(x.date).format('ll')}</div>`)
+    } else if (i > 0) {
+      var currentDate = moment(x.date)
+      var prevDate = moment(items[i-1].date)
+      if (currentDate.day() !== prevDate.day()) {
+        results.push(yo`<div class="ui horizontal divider">${moment(x.date).format('ll')}</div>`)
+      } else if (currentDate.isBefore(prevDate.subtract(1, 'hour'))) {
+        results.push(yo`<div class="ui hidden divider"></div>`)
+      }
     }
 
     results.push(renderItem(x))
