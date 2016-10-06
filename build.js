@@ -100,7 +100,7 @@ function renderItems (items) {
   var results = []
   items.forEach((x, i) => {
     if (i === 0) {
-      results.push(yo`<div class="ui horizontal divider">最新</div>`)
+      results.push(yo`<div class="ui horizontal divider">${moment(x.date).format('ll')}</div>`)
     } else if (i > 0) {
       var currentDate = moment(x.date)
       var prevDate = moment(items[i-1].date)
@@ -128,7 +128,10 @@ function renderItem (x) {
         <div class="summary">
           <a class="user" href="${x.meta.link}">${x.author}</a>
           發佈 <a href="${x.link}" target="_blank">${x.title}</a>
-          <div class="date">${moment(x.date).fromNow()}</div>
+          <div class="date">
+            ${moment(x.date).fromNow()} -
+            ${moment(x.date).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
         </div>
         <div class="extra text">
           ${x.description}<br />
