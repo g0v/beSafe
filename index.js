@@ -135,7 +135,6 @@ function renderItem (x) {
           <a class="user" href="${x.meta.link}">${x.author}</a>
           發佈 <a href="${x.link}" target="_blank">${x.title}</a>
           <div class="date">
-            ${moment(x.date).fromNow()} -
             ${moment(x.date).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         </div>
