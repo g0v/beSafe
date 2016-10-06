@@ -17,6 +17,8 @@ var keys = ['93ee801c6d562f29f01dce5c38a60ed61cc0985c97e552dfa54bc75e707effa2']
 var items = []
 var feeds = []
 
+var heatmap = {}
+
 var cal = new CalHeatMap()
 cal.init({
   domain: 'month',
@@ -62,6 +64,9 @@ function connect (key) {
         feeds[key].load(entry).then(item => {
           console.log(item)
           items.push(item)
+          var time = item.date.getTime() / 1000
+          if (!heatmap[time]) heatmap[time] = 0
+          heatmap[time] += 1
 
           update()
         })
@@ -74,8 +79,10 @@ function updateApp () {
   console.log('updating')
   items = items.sort((x, y) => { return y.date - x.date })
 
+  console.log(heatmap)
   render()
   jdenticon()
+  cal.update(heatmap)
 }
 
 function render () {
@@ -96,11 +103,10 @@ function renderItem (x) {
       <div class="content">
         <div class="summary">
           <a class="user">${x.author}</a>
-          alerted
+          alerted <a>${x.title}</a>
           <div class="date">${moment(x.date).fromNow()}</div>
         </div>
         <div class="extra text">
-          ${x.title}<br />
           ${x.description}
         </div>
         <div class="meta">

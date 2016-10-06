@@ -1,0 +1,12 @@
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cal-heatmap-container {
+  margin: 0 auto;
+}
+
+.extra {
+  max-width: 800px !important;
+}
