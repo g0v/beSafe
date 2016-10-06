@@ -43,6 +43,7 @@ var update = _.debounce(updateApp, 500)
 
 function connect (key) {
   return (cb) => {
+    var firstConnection = true
     console.log('start connect', key)
     var feed = hf.createFeed(key, {own: false})
     console.log('opened', key)
@@ -55,7 +56,10 @@ function connect (key) {
       peer.on('close', function () {
         console.log(`[${feed.key().toString('hex')}]`, 'peer disconnected')
       })
-      cb()
+      if (firstConnection) {
+        firstConnection = false
+        cb()
+      }
     })
     feeds[key] = feed
 
