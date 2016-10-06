@@ -90,7 +90,7 @@ function updateApp () {
 function render () {
   console.log('render', items.length)
   yo.update(document.querySelector('#timeline'), yo`
-    <div id="timeline">
+    <div id="timeline" class="ui basic segment">
       <div class="ui feed">${items.map(x => { return renderItem(x) })}</div>
     </div>
   `)
