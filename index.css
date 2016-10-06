@@ -3,11 +3,33 @@
   margin: 0 auto;
 }
 
-.cal-heatmap-container {
-  margin: 0 auto;
+#cal-heatmap {
+  display: inline-block;
+}
+
+#heatmap {
+  display: none;
+  text-align: center;
 }
 
 .extra {
   max-width: 1200px !important;
   white-space: pre-wrap;
+}
+
+#header {
+  padding: 100px 0;
+  margin-bottom: 30px;
+  text-align: center;
+  background-color: #f9f8e8;
+}
+
+.h4 {
+  text-align: center;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.dimmer {
+  margin-top: 28px;
 }

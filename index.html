@@ -13,8 +13,24 @@
   </head>
   <body>
     <div id="app">
-      <div id="cal-heatmap"></div>
-      <div id="timeline" class="ui basic loading segment"></div>
+      <div id="header">
+        <h2>災害警示公開資料彙整</h2>
+        <div>
+          提供來自<a href="https://alerts.ncdr.nat.gov.tw/">國家災害防救科技中心</a>、<a href="http://www.emic.gov.tw/Content.aspx?ID=18&MenuID=65">中央災害應變中心災害情報站</a>、以及<a href="http://www.cwb.gov.tw/V7/service/eservice/rss.htm">中央氣象局多元服務中心</a>的 RSS 即時訊息彙整。
+        </div>
+        <div>
+          此網站採用 P2P 分散式架構，減少對來源網站的流量負擔，同時確保資訊不中斷。
+        </div>
+      </div>
+      <div id="heatmap">
+        <div class="h4">本月資訊流量圖</div>
+        <div id="cal-heatmap"></div>
+      </div>
+      <div id="timeline" class="ui basic segment">
+        <div class="ui active inverted dimmer">
+          <div class="ui text loader" id="loading_msg">讀取中...</div>
+        </div>
+      </div>
     </div>
     <script src="build.js"></script>
   </body>

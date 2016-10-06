@@ -26,7 +26,8 @@ cal.init({
   colLimit: 31,
   range: 1,
   cellSize: 15,
-  displayLegend: false
+  displayLegend: false,
+  tooltip: true
 })
 
 var tasks = []
@@ -39,6 +40,8 @@ async.series(tasks, (err, connections) => {
 })
 
 var update = _.debounce(updateApp, 500)
+
+var loaded = 0
 
 function connect (key) {
   return (cb) => {
@@ -64,6 +67,9 @@ function connect (key) {
 
     var list = feed.list({live: true})
     list.on('data', entry => {
+      loaded += 1
+      var loadMsg = document.querySelector('#loading_msg')
+      if (loadMsg) loadMsg.innerHTML = `讀取中 (${loaded})...`
       if (moment(entry.ctime) > moment().subtract(1, 'month')) {
         feeds[key].load(entry).then(item => {
           items.push(item)
@@ -88,6 +94,7 @@ function updateApp () {
 
 function render () {
   console.log('render', items.length)
+  document.querySelector('#heatmap').style.display = 'block'
   yo.update(document.querySelector('#timeline'), yo`
     <div id="timeline" class="ui basic segment">
       <div class="ui feed">${renderItems(items)}</div>
