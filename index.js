@@ -16,6 +16,7 @@ var keys = ['93ee801c6d562f29f01dce5c38a60ed61cc0985c97e552dfa54bc75e707effa2']
 
 var items = []
 var feeds = []
+window.items = items
 
 var heatmap = {}
 
@@ -57,12 +58,10 @@ function connect (key) {
     })
     feeds[key] = feed
 
-    console.log('listing')
     var list = feed.list({live: true})
     list.on('data', entry => {
-      if (moment(entry.ctime) > moment().subtract(3, 'days')) {
+      if (moment(entry.ctime) > moment().subtract(1, 'month')) {
         feeds[key].load(entry).then(item => {
-          console.log(item)
           items.push(item)
           var time = item.date.getTime() / 1000
           if (!heatmap[time]) heatmap[time] = 0
@@ -76,10 +75,8 @@ function connect (key) {
 }
 
 function updateApp () {
-  console.log('updating')
   items = items.sort((x, y) => { return y.date - x.date })
 
-  console.log(heatmap)
   render()
   jdenticon()
   cal.update(heatmap)
@@ -95,19 +92,20 @@ function render () {
 }
 
 function renderItem (x) {
+  var author = x.author || x.guid
   return yo`
     <div class="event">
       <div class="label">
-        <svg width="35" height="35" data-jdenticon-hash="${crypto.createHash('sha256').update(x.author).digest('hex')}"></svg>
+        <svg width="35" height="35" data-jdenticon-hash="${crypto.createHash('sha256').update(author).digest('hex')}"></svg>
       </div>
       <div class="content">
         <div class="summary">
           <a class="user">${x.author}</a>
-          alerted <a>${x.title}</a>
+          發佈 <a href="${x.link}" target="_blank">${x.title}</a>
           <div class="date">${moment(x.date).fromNow()}</div>
         </div>
         <div class="extra text">
-          ${x.description}
+          ${x.description}<br />
         </div>
         <div class="meta">
           ${x.guid}

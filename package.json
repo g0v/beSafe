@@ -1,13 +1,13 @@
 {
-  "name": "flanky",
+  "name": "besafe",
   "version": "1.0.0",
-  "description": "Decentralized Newsfeed",
+  "description": "P2P news feed",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "./node_modules/.bin/browserify index.js > build.js"
   },
-  "keywords": [],
+  "keywords": ["hyperfeed", "disaster", "newsfeed", "webrtc"],
   "author": "Poga Po<poga.po@gmail.com>",
   "license": "MIT",
   "dependencies": {
