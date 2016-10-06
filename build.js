@@ -91,9 +91,24 @@ function render () {
   console.log('render', items.length)
   yo.update(document.querySelector('#timeline'), yo`
     <div id="timeline" class="ui basic segment">
-      <div class="ui feed">${items.map(x => { return renderItem(x) })}</div>
+      <div class="ui feed">${renderItems(items)}</div>
     </div>
   `)
+}
+
+function renderItems (items) {
+  var results = []
+  items.forEach((x, i) => {
+    if (i === 0) {
+      results.push(yo`<div class="ui horizontal divider">最新</div>`)
+    } else if ((i > 0) && (moment(x.date).day() !== moment(items[i - 1].date).day())) {
+      results.push(yo`<div class="ui horizontal divider">${moment(x.date).format('ll')}</div>`)
+    }
+
+    results.push(renderItem(x))
+  })
+
+  return results
 }
 
 function renderItem (x) {
