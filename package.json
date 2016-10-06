@@ -11,10 +11,11 @@
   "author": "Poga Po<poga.po@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "co": "^4.6.0",
     "express": "^4.14.0",
-    "hyperfeed": "^1.15.1",
+    "hyperdrive": "^7.6.0",
+    "hyperfeed": "^2.0.0",
     "level-browserify": "^1.1.0",
+    "lodash": "^4.16.3",
     "moment": "^2.15.1",
     "yo-yo": "^1.2.2"
   },
