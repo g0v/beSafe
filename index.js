@@ -133,7 +133,7 @@ function renderItem (x) {
           </div>
         </div>
         <div class="extra text">
-          ${x.description}<br />
+          ${x.description}
         </div>
         <div class="meta">
           ${x.guid}

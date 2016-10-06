@@ -9,4 +9,5 @@
 
 .extra {
   max-width: 1200px !important;
+  white-space: pre-wrap;
 }
