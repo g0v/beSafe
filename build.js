@@ -11,7 +11,17 @@ const _ = require('lodash')
 
 moment.locale('zh-tw')
 
-var hf = hyperfeed(hyperdrive(level('feed')))
+var db = level('feed')
+var hf = hyperfeed(hyperdrive(db))
+var connCount = 0
+
+function updateStats () {
+  yo.update(document.querySelector('#stats'), yo`
+    <div id="stats" class="desc">
+      ${connCount} 人連線中
+    </div>
+  `)
+}
 
 var keys = ['93ee801c6d562f29f01dce5c38a60ed61cc0985c97e552dfa54bc75e707effa2']
 
@@ -54,9 +64,13 @@ function connect (key) {
     console.log('swarming', key)
     sw.on('error', e => console.error(e))
     sw.on('connection', function (peer, type) {
+      connCount += 1
+      updateStats()
       console.log(`[${feed.key().toString('hex')}]`, 'got', type) // type is 'webrtc-swarm' or 'discovery-swarm'
       console.log(`[${feed.key().toString('hex')}]`, 'connected to', sw.connections, 'peers')
       peer.on('close', function () {
+        connCount -= 1
+        updateStats()
         console.log(`[${feed.key().toString('hex')}]`, 'peer disconnected')
       })
       if (firstConnection) {
@@ -45905,14 +45919,14 @@ Feed.prototype.setMeta = function (meta) {
   })
 }
 
-Feed.prototype.push = function (entry) {
-  if (!entry.guid) entry.guid = uuid.v1()
-  if (!entry.date) entry.date = new Date()
+Feed.prototype.push = function (item) {
+  if (!item.guid) item.guid = uuid.v1()
+  if (!item.date) item.date = new Date()
 
   return new Promise((resolve, reject) => {
     var tasks = []
 
-    tasks.push(this._save(entry))
+    tasks.push(this._save(item))
 
     async.series(tasks, (err, results) => {
       if (err) return reject(new Error('archive failed'))
@@ -45931,7 +45945,7 @@ Feed.prototype.list = function (opts, cb) {
   if (!opts.live) opts.live = false
 
   var rs = through2.obj(function (obj, enc, next) {
-    if (obj.name !== '_meta') this.push(obj)
+    if (obj.name !== '_meta' && (opts.withScrapped || !obj.name.startsWith('scrap/'))) this.push(obj)
     next()
   })
   var finalize = (cb) => {
@@ -45946,7 +45960,7 @@ Feed.prototype.list = function (opts, cb) {
       this._archive.list(opts, (err, results) => {
         if (err) return cb(err)
 
-        cb(null, results.filter(x => { return x.name !== '_meta' }))
+        cb(null, results.filter(x => { return x.name !== '_meta' && (opts.withScrapped || !x.name.startsWith('scrap/')) }))
       })
     } else {
       this._archive.list(opts).pipe(rs)
@@ -45973,46 +45987,46 @@ Feed.prototype.xml = function (count) {
   })
 }
 
-Feed.prototype._save = function (entry) {
+Feed.prototype._save = function (item) {
   var feed = this
   return (cb) => {
     this.list((err, entries) => {
       if (err) return cb(err)
-      if (entries.find(x => x.name === entry.guid)) return cb() // ignore duplicated entry
-      if (!entry.guid) return cb(new Error('GUID not found'))
+      if (entries.find(x => x.name === item.guid)) return cb() // ignore duplicated entry
+      if (!item.guid) return cb(new Error('GUID not found'))
 
-      toStream(JSON.stringify(entry)).pipe(this._createWriteStream(entry)).on('finish', done)
+      toStream(JSON.stringify(item)).pipe(this._createWriteStream(item)).on('finish', done)
     })
 
     function done () {
-      if (feed.scrap) return feed._scrap(entry)(cb)
+      if (feed.scrap) return feed._scrap(item)(cb)
       return cb()
     }
   }
 }
 
-Feed.prototype._scrap = function (entry) {
+Feed.prototype._scrap = function (item) {
   return (cb) => {
-    var url = entry.url || entry.link
+    var url = item.url || item.link
     request(url, (err, resp, body) => {
       if (err) return cb(err)
       if (resp.statusCode !== 200) return cb(new Error('invalid status code'))
 
-      toStream(body).pipe(this._createWriteStream(entry)).on('finish', cb)
+      toStream(body).pipe(this._createWriteStream({guid: `scrap/${item.guid}`, date: item.date})).on('finish', cb)
     })
   }
 }
 
-Feed.prototype._createWriteStream = function (entry) {
+Feed.prototype._createWriteStream = function (item) {
   return this._archive.createFileWriteStream({
-    name: entry.guid,
-    ctime: entry.date ? entry.date.getTime() : 0
+    name: item.guid,
+    ctime: item.date ? item.date.getTime() : 0
   })
 }
 
-Feed.prototype.load = function (entry) {
+Feed.prototype.load = function (entry, opts) {
   return new Promise((resolve, reject) => {
-    this._load(entry)((err, item) => {
+    this._load(entry, opts)((err, item) => {
       if (err) return reject(err)
 
       resolve(item)
@@ -46020,13 +46034,13 @@ Feed.prototype.load = function (entry) {
   })
 }
 
-Feed.prototype._load = function (entry) {
+Feed.prototype._load = function (entry, opts) {
   return (cb) => {
     var rs = this._archive.createFileReadStream(entry)
     toString(rs, (err, str) => {
       if (err) return cb(err)
 
-      var item = JSON.parse(str)
+      var item = (opts && opts.raw) ? str : JSON.parse(str)
       item.date = moment(item.date).toDate()
       cb(null, item)
     })

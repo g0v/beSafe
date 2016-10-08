@@ -10,7 +10,17 @@ const _ = require('lodash')
 
 moment.locale('zh-tw')
 
-var hf = hyperfeed(hyperdrive(level('feed')))
+var db = level('feed')
+var hf = hyperfeed(hyperdrive(db))
+var connCount = 0
+
+function updateStats () {
+  yo.update(document.querySelector('#stats'), yo`
+    <div id="stats" class="desc">
+      ${connCount} 人連線中
+    </div>
+  `)
+}
 
 var keys = ['93ee801c6d562f29f01dce5c38a60ed61cc0985c97e552dfa54bc75e707effa2']
 
@@ -53,9 +63,13 @@ function connect (key) {
     console.log('swarming', key)
     sw.on('error', e => console.error(e))
     sw.on('connection', function (peer, type) {
+      connCount += 1
+      updateStats()
       console.log(`[${feed.key().toString('hex')}]`, 'got', type) // type is 'webrtc-swarm' or 'discovery-swarm'
       console.log(`[${feed.key().toString('hex')}]`, 'connected to', sw.connections, 'peers')
       peer.on('close', function () {
+        connCount -= 1
+        updateStats()
         console.log(`[${feed.key().toString('hex')}]`, 'peer disconnected')
       })
       if (firstConnection) {
