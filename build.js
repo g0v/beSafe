@@ -23,7 +23,7 @@ function updateStats () {
   `)
 }
 
-var keys = ['b281cc504556ac1a81b6f4dfc7664ca9ee669ca6579b97198488279c298f5ebc']
+var keys = ['b84132a5a94ef69387e9419aa994378710268993714e7532cb43c3922467c873']
 
 var items = []
 var feeds = []
@@ -45894,10 +45894,10 @@ Feed.prototype.update = function (feed) {
     })
     feedparser.on('readable', function () {
       var readable = this
-      var entry
+      var item
 
-      while ((entry = readable.read())) {
-        tasks.push(self._save(entry))
+      while ((item = readable.read())) {
+        tasks.push(_save(item))
       }
     })
     feedparser.on('end', function () {
@@ -45907,6 +45907,12 @@ Feed.prototype.update = function (feed) {
       })
     })
   })
+
+  function _save (item) {
+    return (cb) => {
+      self.save(item).then(() => { cb() }).catch(err => { cb(err) })
+    }
+  }
 }
 
 Feed.prototype.setMeta = function (meta) {
@@ -45916,22 +45922,6 @@ Feed.prototype.setMeta = function (meta) {
   return new Promise((resolve, reject) => {
     var ws = self._archive.createFileWriteStream('_meta')
     toStream(JSON.stringify(meta)).pipe(ws).on('finish', () => { resolve(self) })
-  })
-}
-
-Feed.prototype.push = function (item) {
-  if (!item.guid) item.guid = uuid.v1()
-  if (!item.date) item.date = new Date()
-
-  return new Promise((resolve, reject) => {
-    var tasks = []
-
-    tasks.push(this._save(item))
-
-    async.series(tasks, (err, results) => {
-      if (err) return reject(new Error('archive failed'))
-      resolve(this)
-    })
   })
 }
 
@@ -45987,33 +45977,53 @@ Feed.prototype.xml = function (count) {
   })
 }
 
-Feed.prototype._save = function (item) {
-  var feed = this
-  return (cb) => {
-    this.list((err, entries) => {
-      if (err) return cb(err)
-      if (entries.find(x => x.name === item.guid)) return cb() // ignore duplicated entry
-      if (!item.guid) return cb(new Error('GUID not found'))
+Feed.prototype.save = function (item, targetEntry, scrappedData) {
+  if (!item.guid) item.guid = uuid.v1()
+  if (!item.date) item.date = new Date()
 
-      toStream(JSON.stringify(item)).pipe(this._createWriteStream(item)).on('finish', done)
+  var feed = this
+  return new Promise((resolve, reject) => {
+    feed.list((err, entries) => {
+      if (err) return reject(err)
+      if (entries.find(x => x.name === item.guid)) return resolve() // ignore duplicated entry
+      if (!item.guid) return reject(new Error('GUID not found'))
+
+      var to
+      if (targetEntry) {
+        to = feed._archive.createFileWriteStream(targetEntry)
+      } else {
+        to = feed._createWriteStream(item)
+      }
+      toStream(JSON.stringify(item)).pipe(to).on('finish', done)
     })
 
     function done () {
-      if (feed.scrap) return feed._scrap(item)(cb)
-      return cb()
+      if (feed.scrap) {
+        if (scrappedData) return feed._saveScrapped(item, scrappedData)(resolve)
+
+        return feed._scrap(item)(resolve)
+      }
+      return resolve()
     }
-  }
+  })
 }
 
 Feed.prototype._scrap = function (item) {
+  var self = this
   return (cb) => {
     var url = item.url || item.link
     request(url, (err, resp, body) => {
       if (err) return cb(err)
       if (resp.statusCode !== 200) return cb(new Error('invalid status code'))
 
-      toStream(body).pipe(this._createWriteStream({guid: `scrap/${item.guid}`, date: item.date})).on('finish', cb)
+      self._saveScrapped(item, body)(cb)
     })
+  }
+}
+
+Feed.prototype._saveScrapped = function (item, data) {
+  return (cb) => {
+    toStream(data).pipe(this._createWriteStream({guid: `scrap/${item.guid}`, date: item.date})).on('finish', cb)
   }
 }
 
@@ -46036,13 +46046,14 @@ Feed.prototype.load = function (entry, opts) {
 
 Feed.prototype._load = function (entry, opts) {
   return (cb) => {
-    var rs = this._archive.createFileReadStream(entry)
-    toString(rs, (err, str) => {
-      if (err) return cb(err)
-
+    toString(this._archive.createFileReadStream(entry)).then(str => {
       var item = (opts && opts.raw) ? str : JSON.parse(str)
       item.date = moment(item.date).toDate()
+
       cb(null, item)
+    })
+    .catch(err => {
+      cb(err)
     })
   }
 }
