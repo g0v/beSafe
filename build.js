@@ -9,6 +9,17 @@ const moment = require('moment')
 const async = require('async')
 const _ = require('lodash')
 
+if (!Modernizr.peerconnection) {
+  yo.update(document.querySelector('#timeline'), yo`
+    <div id="timeline" class="ui basic center aligned segment">
+      <h3>此瀏覽器不支援 WebRTC</h3>
+      <div>
+        We're working on it. Please try again with Google Chrome or Firefox.
+      </div>
+    </div>
+  `)
+}
+
 moment.locale('zh-tw')
 
 var db = level('feed')
