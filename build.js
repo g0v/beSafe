@@ -90,10 +90,10 @@ function connect (key) {
 
     var list = feed.list({live: true})
     list.on('data', entry => {
-      loaded += 1
       var loadMsg = document.querySelector('#loading_msg')
       if (loadMsg) loadMsg.innerHTML = `讀取中 (${loaded})...`
       if (moment(entry.ctime) > moment().subtract(1, 'month')) {
+        loaded += 1
         feeds[key].load(entry).then(item => {
           items.push(item)
           var time = item.date.getTime() / 1000
