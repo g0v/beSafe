@@ -88,16 +88,22 @@ function connect (key) {
     feeds[key] = feed
 
     var list = feed.list({live: true})
+    var metadataLimit = moment().subtract(1, 'month')
+    var loadLimit = moment().subtract(1, 'day')
     list.on('data', entry => {
       var loadMsg = document.querySelector('#loading_msg')
       if (loadMsg) loadMsg.innerHTML = `讀取中 (${loaded})...`
-      if (moment(entry.ctime) > moment().subtract(1, 'month')) {
+
+      var ctime = moment(entry.ctime)
+      if (ctime > metadataLimit) {
         loaded += 1
+        var time = entry.ctime / 1000
+        if (!heatmap[time]) heatmap[time] = 0
+        heatmap[time] += 1
+      }
+      if (ctime > loadLimit) {
         feeds[key].load(entry).then(item => {
           items.push(item)
-          var time = item.date.getTime() / 1000
-          if (!heatmap[time]) heatmap[time] = 0
-          heatmap[time] += 1
 
           update()
         })
