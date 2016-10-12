@@ -1,4 +1,4 @@
-/* globals jdenticon, CalHeatMap */
+/* globals jdenticon, CalHeatMap, Modernizr */
 const hyperfeed = require('hyperfeed')
 const hyperdrive = require('hyperdrive')
 const level = require('level-browserify')
@@ -59,7 +59,7 @@ async.series(tasks, (err, connections) => {
   console.log('all connected', connections.length)
 })
 
-var update = _.debounce(updateApp, 500)
+var update = _.debounce(updateApp, 200)
 
 var loaded = 0
 
