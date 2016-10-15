@@ -181,7 +181,8 @@ function renderItem (x) {
           ${x.description}
         </div>
         <div class="meta">
-          <i class="map pin icon" onclick=${openMap(x)}></i>${x.guid}
+          ${x.link.endsWith('.cap') ? yo`<i class="map pin icon" onclick=${openMap(x)}></i>` : ''}
+          ${x.guid}
         </div>
       </div>
     </div>
@@ -192,6 +193,7 @@ function openMap (item) {
   return () => {
     console.log('opening map', item.guid)
     window.feed.load(`scrap/${item.guid}`, {raw: true}).then(data => {
+      console.log(data)
       var coord = data.match(/<circle>(.+)<\/circle>/)[1]
       var geo = coord.split(' ')[0].split(',').map(x => parseFloat(x))
       console.log(geo)
