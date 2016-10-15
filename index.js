@@ -86,6 +86,15 @@ function connect (key) {
       }
     })
     feeds[key] = feed
+    window.feed = feed
+
+    feeds[key].load('scrap/THB-Bobe2016101417015905291073154722', {raw: true}).then(data => {
+      var coord = data.match(/<circle>(.+)<\/circle>/)[1]
+      var geo = coord.split(' ')[0].split(',').map(x => parseFloat(x))
+      console.log(geo)
+      var pos = {lat: geo[0], lng: geo[1]}
+      window.open(`http://maps.google.com/maps?q=${pos['lat']},${pos['lng']}`)
+    })
 
     var list = feed.list({live: true})
     var metadataLimit = moment().subtract(1, 'month')
@@ -93,6 +102,7 @@ function connect (key) {
     list.on('data', entry => {
       var loadMsg = document.querySelector('#loading_msg')
       if (loadMsg) loadMsg.innerHTML = `讀取中 (${loaded})...`
+      update()
 
       var ctime = moment(entry.ctime)
       if (ctime > metadataLimit) {
@@ -170,9 +180,22 @@ function renderItem (x) {
           ${x.description}
         </div>
         <div class="meta">
-          ${x.guid}
+          <i class="map pin icon" onclick=${openMap(x)}></i>${x.guid}
         </div>
       </div>
     </div>
   `
+}
+
+function openMap (item) {
+  return () => {
+    console.log('opening map', item.guid)
+    window.feed.load(`scrap/${item.guid}`, {raw: true}).then(data => {
+      var coord = data.match(/<circle>(.+)<\/circle>/)[1]
+      var geo = coord.split(' ')[0].split(',').map(x => parseFloat(x))
+      console.log(geo)
+      var pos = {lat: geo[0], lng: geo[1]}
+      window.open(`http://maps.google.com/maps?q=${pos['lat']},${pos['lng']}`)
+    })
+  }
 }
