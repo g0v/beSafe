@@ -43,3 +43,8 @@
 .desc {
   margin-bottom: 5px;
 }
+.map {
+  height: 400px;
+  width: 400px;
+  display: none;
+}

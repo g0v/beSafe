@@ -88,14 +88,6 @@ function connect (key) {
     feeds[key] = feed
     window.feed = feed
 
-    feeds[key].load('scrap/THB-Bobe2016101417015905291073154722', {raw: true}).then(data => {
-      var coord = data.match(/<circle>(.+)<\/circle>/)[1]
-      var geo = coord.split(' ')[0].split(',').map(x => parseFloat(x))
-      console.log(geo)
-      var pos = {lat: geo[0], lng: geo[1]}
-      window.open(`http://maps.google.com/maps?q=${pos['lat']},${pos['lng']}`)
-    })
-
     var list = feed.list({live: true})
     var metadataLimit = moment().subtract(1, 'month')
     var loadLimit = moment().subtract(1, 'day')
@@ -178,6 +170,7 @@ function renderItem (x) {
         </div>
         <div class="extra text">
           ${x.description}
+          <div id="map-${x.guid}" class="map"></div>
         </div>
         <div class="meta">
           ${x.link.endsWith('.cap') ? yo`<i class="map pin icon" onclick=${openMap(x)}></i>` : ''}
@@ -192,12 +185,21 @@ function openMap (item) {
   return () => {
     console.log('opening map', item.guid)
     window.feed.load(`scrap/${item.guid}`, {raw: true}).then(data => {
+      var el = document.getElementById(`map-${item.guid}`)
+      var map = new google.maps.Map(el, {
+          zoom: 10
+        })
+      var infoWindow = new google.maps.InfoWindow({map: map});
       console.log(data)
       var coord = data.match(/<circle>(.+)<\/circle>/)[1]
       var geo = coord.split(' ')[0].split(',').map(x => parseFloat(x))
       console.log(geo)
       var pos = {lat: geo[0], lng: geo[1]}
-      window.open(`http://maps.google.com/maps?q=${pos['lat']},${pos['lng']}`)
+      //window.open(`http://maps.google.com/maps?q=${pos['lat']},${pos['lng']}`)
+      infoWindow.setPosition(pos)
+      infoWindow.setContent(item.title)
+      map.setCenter(pos)
+      el.style.display = 'block'
     })
   }
 }
