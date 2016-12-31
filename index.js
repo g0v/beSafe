@@ -51,7 +51,8 @@ function connect (url) {
 }
 
 function updateApp () {
-  items = items.sort((x, y) => { return y.item.date - x.item.date })
+  console.log(items[0])
+  items = items.sort((x, y) => { return new Date(y.date) - new Date(x.date) })
 
   render()
   jdenticon()
