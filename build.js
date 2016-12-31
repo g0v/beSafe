@@ -52,7 +52,6 @@ function connect (url) {
 }
 
 function updateApp () {
-  console.log(items[0])
   items = items.sort((x, y) => { return new Date(y.date) - new Date(x.date) })
 
   render()
