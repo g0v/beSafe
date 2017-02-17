@@ -30,7 +30,7 @@ var update = _.debounce(updateApp, 200)
 
 var loaded = 0
 
-connect('wss://devpoga.org:9091')
+connect('ws://devpoga.org:9091')
 
 function connect (url) {
   var socket = new WebSocket(url)
